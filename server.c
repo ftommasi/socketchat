@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MY_SOCK_PATH "/student/lucascw/os/studio24/somepath"
+#define MY_SOCK_PATH "./somepath"
 #define LISTEN_BACKLOG 50
 
 #define handle_error(msg) \
