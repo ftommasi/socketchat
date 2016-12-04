@@ -42,7 +42,7 @@ main(int argc, char *argv[])
         if (cfd == -1)
             handle_error("accept");
 
-        FILE* file = fdopen(cfd, "r");
+        FILE* file = fdopen(cfd, "r+");
         if (file == NULL) {
             handle_error("fdopen");
         }
@@ -50,6 +50,8 @@ main(int argc, char *argv[])
         char buf[255];
         while (fgets(buf, 255, file) != NULL) {
             printf("%s", buf);
+            fprintf(file, "%s", buf);
+            fflush(file);
         }
 
         if (fclose(file)) {
