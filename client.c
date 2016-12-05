@@ -53,9 +53,8 @@ int main(int argc, char *argv[])
     }
     char IP_address[256];
     strcpy(&IP_address,argv[1]);
-    char port_num[256];
-    strcpy(port_num,argv[2]);
-    
+    int port_num = atoi(argv[2]);
+
     int sfd, cfd;
     struct sockaddr_in my_addr, peer_addr;
     socklen_t peer_addr_size;
@@ -67,10 +66,10 @@ int main(int argc, char *argv[])
     memset(&my_addr, 0, sizeof(struct sockaddr_in));
                         /* Clear structure */
     my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(54321);
+    my_addr.sin_port = htons(port_num);
     //my_addr.sin_addr.s_addr = htonl("127.0.0.1");
     
-    inet_aton("127.0.0.1",&my_addr.sin_addr.s_addr);
+    inet_aton(&IP_address,&my_addr.sin_addr.s_addr);
     
 //    strncpy(my_addr.sun_path, MY_SOCK_PATH,           sizeof(my_addr.sun_path) - 1);
 

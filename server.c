@@ -178,9 +178,7 @@ int main(int argc, char *argv[])
     }
     char IP_address[256];
     strcpy(&IP_address,argv[1]);
-    char port_num[256];
-    strcpy(&port_num,argv[2]);
-
+    int port_num = atoi(argv[2]); 
     head = (struct Node*) malloc(sizeof(Node));
     if (head == NULL) {
         handle_error("error mallocing head");
@@ -199,7 +197,7 @@ int main(int argc, char *argv[])
                         /* Clear structure */
     my_addr.sin_family = AF_INET;
     //strncpy(my_addr.sun_path, MY_SOCK_PATH,     sizeof(my_addr.sun_path) - 1);
-    my_addr.sin_port = htons(54321);
+    my_addr.sin_port = htons(port_num);
     my_addr.sin_addr.s_addr = INADDR_ANY;
     //inet_aton("127.0.0.1",&my_addr.sin_addr);
     if (bind(sfd, (struct sockaddr *) &my_addr,
