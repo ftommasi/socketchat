@@ -1,3 +1,8 @@
+// Christopher Lucas
+// Fausto Tommasi
+//
+// code heavily modified from bind(2) example
+
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <stdlib.h>
