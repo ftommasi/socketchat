@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     if (sfd == -1)
         handle_error("socket");
 
-    memset(&my_addr, 0, sizeof(struct sockaddr_un));
+    memset(&my_addr, 0, sizeof(struct sockaddr_in));
                         /* Clear structure */
     my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(atoi(port_num));
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 //    strncpy(my_addr.sun_path, MY_SOCK_PATH,           sizeof(my_addr.sun_path) - 1);
 
     if (connect(sfd, (struct sockaddr *) &my_addr,
-            sizeof(struct sockaddr_un)) == -1)
+            sizeof(struct sockaddr_in)) == -1)
         handle_error("connect");
 
     pthread_t id;
