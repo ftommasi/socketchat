@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
-
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 #define MY_SOCK_PATH "./somepath"
 #define LISTEN_BACKLOG 50
 
@@ -50,8 +51,10 @@ int main(int argc, char *argv[])
       usage_error_print();
       return -1;
     }
-    char IP_address[] = argv[1];
-    char port_num[] = argv[2];
+    char IP_address[256];
+    strcpy(&IP_address,argv[1]);
+    char port_num[256];
+    strcpy(port_num,argv[2]);
     
     int sfd, cfd;
     struct sockaddr_in my_addr, peer_addr;

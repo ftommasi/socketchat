@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #define MY_SOCK_PATH "./somepath"
 #define LISTEN_BACKLOG 50
@@ -174,8 +176,10 @@ int main(int argc, char *argv[])
       usage_error_print();
       return -1;
     }
-    char IP_address[] = argv[1];
-    char port_num[] = argv[2];
+    char IP_address[256];
+    strcpy(&IP_address,argv[1]);
+    char port_num[256];
+    strcpy(&port_num,argv[2]);
 
     head = (struct Node*) malloc(sizeof(Node));
     if (head == NULL) {
@@ -195,7 +199,7 @@ int main(int argc, char *argv[])
                         /* Clear structure */
     my_addr.sin_family = AF_INET;
     //strncpy(my_addr.sun_path, MY_SOCK_PATH,     sizeof(my_addr.sun_path) - 1);
-    myaddr.sin_port(atoi(port_num));
+    my_addr.sin_port = (atoi(port_num));
     inet_aton(IP_address,&my_addr.sin_addr);
     if (bind(sfd, (struct sockaddr *) &my_addr,
             sizeof(struct sockaddr_in)) == -1)
