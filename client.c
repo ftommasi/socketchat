@@ -31,10 +31,30 @@ void* writer(void* args) {
     return NULL;
 }
 
+char verify_args(char* argv[]){
+  //verify IP & socket number
+  return 1;
+}
+
+void usage_error_print(){
+  printf("Usage client <IP address> <port number>\n");
+}
+
 int main(int argc, char *argv[])
 {
+    if(argc < 3 || argc > 3){
+      usage_error_print();
+      return -1;
+    }
+    if(!verify_args(argv)){
+      usage_error_print();
+      return -1;
+    }
+    char IP_address[] = argv[1];
+    char port_num[] = argv[2];
+    
     int sfd, cfd;
-    struct sockaddr_un my_addr, peer_addr;
+    struct sockaddr_in my_addr, peer_addr;
     socklen_t peer_addr_size;
 
     sfd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -43,9 +63,11 @@ int main(int argc, char *argv[])
 
     memset(&my_addr, 0, sizeof(struct sockaddr_un));
                         /* Clear structure */
-    my_addr.sun_family = AF_UNIX;
-    strncpy(my_addr.sun_path, MY_SOCK_PATH,
-            sizeof(my_addr.sun_path) - 1);
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_port = htons(atoi(port_num));
+    inet_aton(IP_address,&my_addr.sin_addr);
+    
+//    strncpy(my_addr.sun_path, MY_SOCK_PATH,           sizeof(my_addr.sun_path) - 1);
 
     if (connect(sfd, (struct sockaddr *) &my_addr,
             sizeof(struct sockaddr_un)) == -1)
