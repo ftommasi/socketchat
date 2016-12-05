@@ -153,8 +153,30 @@ void* forwarder(void* args) {
     return NULL;
 }
 
+char verify_args(char* argv[]){
+  //verify IP & socket number
+  return 1;
+}
+
+void usage_error_print(){
+  printf("Usage client <IP address> <port number>\n");
+}
+
+
 int main(int argc, char *argv[])
 {
+    
+    if(argc < 3 || argc > 3){
+      usage_error_print();
+      return -1;
+    }
+    if(!verify_args(argv)){
+      usage_error_print();
+      return -1;
+    }
+    char IP_address[] = argv[1];
+    char port_num[] = argv[2];
+
     head = (struct Node*) malloc(sizeof(Node));
     if (head == NULL) {
         handle_error("error mallocing head");
