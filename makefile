@@ -1,4 +1,4 @@
-all:
+all: client.c server.c
 	gcc -pthread -o client client.c
 	gcc -pthread -o server server.c
 
