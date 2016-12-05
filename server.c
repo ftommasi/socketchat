@@ -54,8 +54,14 @@ void* forwarder(void* args) {
 
             // save names
             char* oldname = (char*) malloc(strlen(self->name) + 1);
+            if (oldname == NULL) {
+                handle_error("ond name malloc error");
+            }
             strncpy(oldname, self->name, strlen(self->name));
             char* newname = (char*) malloc(strlen(buf) + 1);
+            if (newname == NULL) {
+                handle_error("new name malloc error");
+            }
             strncpy(newname, buf + 5, strlen(buf) - 5 - 1);
             char* message = " has changed their name to ";
 
@@ -68,32 +74,40 @@ void* forwarder(void* args) {
                 Node* curr = head->next;
                 while (curr != NULL) {
                     if (curr->cfd != cfd) {
-                        write(curr->cfd, oldname, strlen(oldname));
-                        write(curr->cfd, message, strlen(message));
-                        write(curr->cfd, newname, strlen(newname));
-                        write(curr->cfd, "\n", 1);
+                        if (
+                            write(curr->cfd, oldname, strlen(oldname)) == -1 ||
+                            write(curr->cfd, message, strlen(message)) == -1 ||
+                            write(curr->cfd, newname, strlen(newname)) == -1 ||
+                            write(curr->cfd, "\n", 1) == -1
+                        ) {
+                            handle_error("name write failed");
+                        }
                     }
                     curr = curr->next;
                 }
             }    
 
             if (pthread_mutex_unlock(my_args->mutex)) {
-                handle_error("mutex unlock");
+                handle_error("name mutex unlock");
             }
         } else {
             // forward message
             Node* curr = head->next;
             while (curr != NULL) {
                 if (curr->cfd != cfd) {
-                    write(curr->cfd, self->name, strlen(self->name));
-                    write(curr->cfd, ": ", 2);
-                    write(curr->cfd, buf, strlen(buf));
+                    if (
+                        write(curr->cfd, self->name, strlen(self->name)) == -1 ||
+                        write(curr->cfd, ": ", 2) == -1 ||
+                        write(curr->cfd, buf, strlen(buf)) == -1
+                    ) {
+                        handle_error("forward write failed");
+                    }
                 }
                 curr = curr->next;
             }
 
             if (pthread_mutex_unlock(my_args->mutex)) {
-                handle_error("mutex unlock");
+                handle_error("forward mutex unlock");
             }
         }
     }
@@ -103,8 +117,12 @@ void* forwarder(void* args) {
     Node* curr = head->next;
     while (curr != NULL) {
         if (curr->cfd != cfd) {
-            write(curr->cfd, self->name, strlen(self->name));
-            write(curr->cfd, " has quit\n", 10);
+            if (
+                write(curr->cfd, self->name, strlen(self->name)) == -1 ||
+                write(curr->cfd, " has quit\n", 10) == -1
+            ) {
+                handle_error("quit write failed");
+            }
         }
         curr = curr->next;
     }
@@ -125,7 +143,7 @@ void* forwarder(void* args) {
     }
 
     if (pthread_mutex_unlock(my_args->mutex)) {
-        handle_error("mutex unlock");
+        handle_error("quit mutex unlock");
     }
     return NULL;
 }
@@ -133,6 +151,9 @@ void* forwarder(void* args) {
 int main(int argc, char *argv[])
 {
     head = (struct Node*) malloc(sizeof(Node));
+    if (head == NULL) {
+        handle_error("error mallocing head");
+    }
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     int sfd, cfd;
@@ -169,9 +190,15 @@ int main(int argc, char *argv[])
             curr = curr->next;
         }
         curr->next = (struct Node*) malloc(sizeof(Node));
+        if (curr->next == NULL) {
+            handle_error("error mallocing node");
+        }
         curr = curr->next;
         curr->cfd = cfd;
         curr->name = (char*) malloc(8);
+        if (curr->name == NULL) {
+            handle_error("error mallocing initial name");
+        }
         strncpy(curr->name, "unnamed\0", 8);
 
         pthread_t id;
@@ -180,7 +207,7 @@ int main(int argc, char *argv[])
         arg.mutex = &mutex;
 
         if (pthread_create(&id, NULL, forwarder, (void*) &arg) != 0) {
-            handle_error("pthread_create error");
+            handle_error("pthread_create error for forwarder");
         }
 
     }
