@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in my_addr, peer_addr;
     socklen_t peer_addr_size;
 
-    sfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1)
         handle_error("socket");
 
@@ -199,8 +199,9 @@ int main(int argc, char *argv[])
                         /* Clear structure */
     my_addr.sin_family = AF_INET;
     //strncpy(my_addr.sun_path, MY_SOCK_PATH,     sizeof(my_addr.sun_path) - 1);
-    my_addr.sin_port = (atoi(port_num));
-    inet_aton(IP_address,&my_addr.sin_addr);
+    my_addr.sin_port = htons(54321);
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    //inet_aton("127.0.0.1",&my_addr.sin_addr);
     if (bind(sfd, (struct sockaddr *) &my_addr,
             sizeof(struct sockaddr_in)) == -1)
         handle_error("bind");
