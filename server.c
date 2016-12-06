@@ -69,7 +69,10 @@ void* forwarder(void* args) {
         if (strncmp("quit\n", buf, 5) == 0) {
             // run quit code below
             break;
-        } else if (strncmp("name ", buf, 5) == 0) {
+        } 
+        else if(strncmp("SHOW\n",buf,5)==0){
+          dump_list();
+        }else if (strncmp("name ", buf, 5) == 0) {
             // change name
 
             // save names
@@ -163,8 +166,9 @@ void* forwarder(void* args) {
         head->next=head->next->next;
     }
     */
+    if(curr->next != cfd) exit(0);
     Node* to_delete = curr->next;
-    curr->next = curr->next->next;
+    curr->next = to_delete->next;
     free(to_delete->name);
     free(to_delete);
 
@@ -247,6 +251,7 @@ int main(int argc, char *argv[])
         if (curr->next == NULL) {
             handle_error("error mallocing node");
         }
+        dump_list();
         curr = curr->next;
         curr->cfd = cfd;
         curr->name = (char*) malloc(8);
