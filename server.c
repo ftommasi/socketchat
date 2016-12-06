@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #define MY_SOCK_PATH "./somepath"
 #define LISTEN_BACKLOG 50
@@ -28,6 +30,19 @@ struct forwarder_args {
     int cfd;
     pthread_mutex_t* mutex;
 };
+
+
+void dump_list(){
+  Node* curr = head->next;
+  int node_count =0;
+  printf("head-> ");
+  while(curr!= NULL ){
+    printf("| %s -> ",curr->name);
+    curr = curr->next;
+    node_count++;
+  }
+  printf("\nfound %d nodes\ndone.\n",node_count);
+}
 
 void* forwarder(void* args) {
     struct forwarder_args* my_args = (struct forwarder_args*) args;
@@ -54,9 +69,9 @@ void* forwarder(void* args) {
         if (strncmp("quit\n", buf, 5) == 0) {
             // run quit code below
             break;
-        } else if (strncmp("name ", buf, 5) == 0) {
+        } 
+        else if (strncmp("name ", buf, 5) == 0) {
             // change name
-
             // save names
             char* oldname = (char*) malloc(strlen(self->name) + 1);
             if (oldname == NULL) {
@@ -90,6 +105,8 @@ void* forwarder(void* args) {
                     }
                     curr = curr->next;
                 }
+
+    dump_list();
             }    
 
             if (pthread_mutex_unlock(my_args->mutex)) {
@@ -137,10 +154,11 @@ void* forwarder(void* args) {
     while (curr != NULL && curr->next != NULL && curr->next->cfd != cfd) {
         curr = curr->next;
     }
-    Node* next = curr->next;
-    curr->next = curr->next->next;
-    free(next->name);
-    free(next);
+    
+    Node* to_delete = curr->next;
+    curr->next = to_delete->next;
+    free(to_delete->name);
+    free(to_delete);
 
     // close socket
     if (fclose(socket)) {
@@ -153,8 +171,30 @@ void* forwarder(void* args) {
     return NULL;
 }
 
+char verify_args(char* argv[]){
+  //verify IP & socket number
+  return 1;
+}
+
+void usage_error_print(){
+  printf("Usage client <IP address> <port number>\n");
+}
+
+
 int main(int argc, char *argv[])
 {
+    
+    if(argc < 3 || argc > 3){
+      usage_error_print();
+      return -1;
+    }
+    if(!verify_args(argv)){
+      usage_error_print();
+      return -1;
+    }
+    char IP_address[256];
+    strcpy(&IP_address,argv[1]);
+    int port_num = atoi(argv[2]); 
     head = (struct Node*) malloc(sizeof(Node));
     if (head == NULL) {
         handle_error("error mallocing head");
@@ -162,27 +202,28 @@ int main(int argc, char *argv[])
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     int sfd, cfd;
-    struct sockaddr_un my_addr, peer_addr;
+    struct sockaddr_in my_addr, peer_addr;
     socklen_t peer_addr_size;
 
-    sfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1)
         handle_error("socket");
 
-    memset(&my_addr, 0, sizeof(struct sockaddr_un));
+    memset(&my_addr, 0, sizeof(struct sockaddr_in));
                         /* Clear structure */
-    my_addr.sun_family = AF_UNIX;
-    strncpy(my_addr.sun_path, MY_SOCK_PATH,
-            sizeof(my_addr.sun_path) - 1);
-
+    my_addr.sin_family = AF_INET;
+    //strncpy(my_addr.sun_path, MY_SOCK_PATH,     sizeof(my_addr.sun_path) - 1);
+    my_addr.sin_port = htons(port_num);
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    //inet_aton("127.0.0.1",&my_addr.sin_addr);
     if (bind(sfd, (struct sockaddr *) &my_addr,
-            sizeof(struct sockaddr_un)) == -1)
+            sizeof(struct sockaddr_in)) == -1)
         handle_error("bind");
 
     if (listen(sfd, LISTEN_BACKLOG) == -1)
         handle_error("listen");
 
-    peer_addr_size = sizeof(struct sockaddr_un);
+    peer_addr_size = sizeof(struct sockaddr_in);
 
     for(;;) {
         cfd = accept(sfd, (struct sockaddr *) &peer_addr,
@@ -191,7 +232,7 @@ int main(int argc, char *argv[])
             handle_error("accept");
 
         Node* curr = head;
-        while (curr->next != NULL) {
+        while (curr!= NULL && curr->next != NULL) {
             curr = curr->next;
         }
         curr->next = (struct Node*) malloc(sizeof(Node));
@@ -205,7 +246,7 @@ int main(int argc, char *argv[])
             handle_error("error mallocing initial name");
         }
         strncpy(curr->name, "unnamed\0", 8);
-
+        dump_list();
         pthread_t id;
         struct forwarder_args arg;
         arg.cfd = cfd;
@@ -214,6 +255,7 @@ int main(int argc, char *argv[])
         if (pthread_create(&id, NULL, forwarder, (void*) &arg) != 0) {
             handle_error("pthread_create error for forwarder");
         }
+        dump_list();
 
     }
 
