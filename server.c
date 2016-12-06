@@ -31,6 +31,19 @@ struct forwarder_args {
     pthread_mutex_t* mutex;
 };
 
+
+void dump_list(){
+  Node* curr = head->next;
+  int node_count =0;
+  printf("head-> ");
+  while(curr!= NULL ){
+    printf("| %s -> ",curr->name);
+    curr = curr->next;
+    node_count++;
+  }
+  printf("\nfound %d nodes\ndone.\n");
+}
+
 void* forwarder(void* args) {
     struct forwarder_args* my_args = (struct forwarder_args*) args;
     int cfd = my_args->cfd;
@@ -92,6 +105,8 @@ void* forwarder(void* args) {
                     }
                     curr = curr->next;
                 }
+
+    dump_list();
             }    
 
             if (pthread_mutex_unlock(my_args->mutex)) {
@@ -139,10 +154,19 @@ void* forwarder(void* args) {
     while (curr != NULL && curr->next != NULL && curr->next->cfd != cfd) {
         curr = curr->next;
     }
-    Node* next = curr->next;
+    /*
+    //special edge case
+    if(curr == head){
+      if(head->next == NULL  || head->next->next == NULL)
+        head->next = NULL;
+      else
+        head->next=head->next->next;
+    }
+    */
+    Node* to_delete = curr->next;
     curr->next = curr->next->next;
-    free(next->name);
-    free(next);
+    free(to_delete->name);
+    free(to_delete);
 
     // close socket
     if (fclose(socket)) {
@@ -239,6 +263,7 @@ int main(int argc, char *argv[])
         if (pthread_create(&id, NULL, forwarder, (void*) &arg) != 0) {
             handle_error("pthread_create error for forwarder");
         }
+        dump_list();
 
     }
 
