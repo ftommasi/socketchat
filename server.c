@@ -41,7 +41,7 @@ void dump_list(){
     curr = curr->next;
     node_count++;
   }
-  printf("\nfound %d nodes\ndone.\n");
+  printf("\nfound %d nodes\ndone.\n",node_count);
 }
 
 void* forwarder(void* args) {
@@ -70,11 +70,8 @@ void* forwarder(void* args) {
             // run quit code below
             break;
         } 
-        else if(strncmp("SHOW\n",buf,5)==0){
-          dump_list();
-        }else if (strncmp("name ", buf, 5) == 0) {
+        else if (strncmp("name ", buf, 5) == 0) {
             // change name
-
             // save names
             char* oldname = (char*) malloc(strlen(self->name) + 1);
             if (oldname == NULL) {
@@ -157,16 +154,7 @@ void* forwarder(void* args) {
     while (curr != NULL && curr->next != NULL && curr->next->cfd != cfd) {
         curr = curr->next;
     }
-    /*
-    //special edge case
-    if(curr == head){
-      if(head->next == NULL  || head->next->next == NULL)
-        head->next = NULL;
-      else
-        head->next=head->next->next;
-    }
-    */
-    if(curr->next != cfd) exit(0);
+    
     Node* to_delete = curr->next;
     curr->next = to_delete->next;
     free(to_delete->name);
@@ -244,14 +232,13 @@ int main(int argc, char *argv[])
             handle_error("accept");
 
         Node* curr = head;
-        while (curr->next != NULL) {
+        while (curr!= NULL && curr->next != NULL) {
             curr = curr->next;
         }
         curr->next = (struct Node*) malloc(sizeof(Node));
         if (curr->next == NULL) {
             handle_error("error mallocing node");
         }
-        dump_list();
         curr = curr->next;
         curr->cfd = cfd;
         curr->name = (char*) malloc(8);
@@ -259,7 +246,7 @@ int main(int argc, char *argv[])
             handle_error("error mallocing initial name");
         }
         strncpy(curr->name, "unnamed\0", 8);
-
+        dump_list();
         pthread_t id;
         struct forwarder_args arg;
         arg.cfd = cfd;
