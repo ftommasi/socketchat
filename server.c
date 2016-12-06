@@ -106,7 +106,7 @@ void* forwarder(void* args) {
                     curr = curr->next;
                 }
 
-    dump_list();
+    //dump_list();
             }    
 
             if (pthread_mutex_unlock(my_args->mutex)) {
@@ -241,12 +241,13 @@ int main(int argc, char *argv[])
         }
         curr = curr->next;
         curr->cfd = cfd;
+        curr->next = NULL;
         curr->name = (char*) malloc(8);
         if (curr->name == NULL) {
             handle_error("error mallocing initial name");
         }
         strncpy(curr->name, "unnamed\0", 8);
-        dump_list();
+        //dump_list();
         pthread_t id;
         struct forwarder_args arg;
         arg.cfd = cfd;
@@ -255,7 +256,7 @@ int main(int argc, char *argv[])
         if (pthread_create(&id, NULL, forwarder, (void*) &arg) != 0) {
             handle_error("pthread_create error for forwarder");
         }
-        dump_list();
+        //dump_list();
 
     }
 
